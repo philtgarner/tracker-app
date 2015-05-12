@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center|left"
-            android:text="URLp"/>
+            android:text="@string/placeholder_url"/>
     </LinearLayout>
 
     <LinearLayout
@@ -50,7 +50,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="match_parent"
                 android:gravity="center|left"
-                android:text="Download"/>
+                android:text="@string/placeholder_download"/>
 
         </LinearLayout>
 
@@ -71,9 +71,9 @@
             <TextView
             android:id="@+id/list_frequency"
             android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center|left"
-            android:text="Frequency"/>
+            android:layout_height="match_parent"
+            android:gravity="center|left"
+            android:text="@string/placeholder_frequency"/>
         </LinearLayout>
 
     </LinearLayout>

@@ -13,19 +13,19 @@
         android:id="@+id/url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="URL"
+        android:hint="@string/placeholder_url"
         android:inputType="textWebEmailAddress"
         />
     <EditText
         android:id="@+id/password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Password"/>
+        android:hint="@string/placeholder_download"/>
     <EditText
         android:id="@+id/frequency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Frequency"
+        android:hint="@string/placeholder_frequency"
         android:numeric="integer"
         />
 

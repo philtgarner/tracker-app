@@ -1,6 +1,5 @@
 package tracker.garner.com.locationtracker;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,12 +8,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.melnykov.fab.FloatingActionButton;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import tracker.garner.com.locationtracker.lists.StoredTracker;
@@ -22,7 +19,7 @@ import tracker.garner.com.locationtracker.lists.TrackerArrayAdapter;
 import tracker.garner.com.locationtracker.lists.sql.TrackerDataSource;
 
 
-public class TrackerList extends TrackerActivity implements View.OnClickListener, AdapterView.OnItemClickListener, MenuItem.OnMenuItemClickListener{
+public class TrackerList extends AbstractTrackerActivity implements View.OnClickListener, AdapterView.OnItemClickListener, MenuItem.OnMenuItemClickListener{
 
     private FloatingActionButton add = null;
     private ListView list = null;

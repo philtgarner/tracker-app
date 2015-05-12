@@ -3,7 +3,8 @@ package tracker.garner.com.locationtracker.lists;
 import java.io.Serializable;
 
 /**
- * Created by Phil on 13/04/2015.
+ * @author Phil Garner
+ * A class to encapsulate the details of tracking information stored in the SQLite database
  */
 public class StoredTracker implements Serializable {
 
@@ -13,6 +14,14 @@ public class StoredTracker implements Serializable {
     private long frequency = 0;
     private long lastUpdate = 0;
 
+    /**
+     * Constructor for a new stored tracker - never call this directly, it will be called when inserting into the database
+     * @param id The ID for the new stored tracker
+     * @param url The URL to send the information to
+     * @param download The download key
+     * @param frequency The frequency to update with
+     * @param lastUpdate The time (in milliseconds) when this tracker was last used
+     */
     public StoredTracker(long id, String url, String download, long frequency, long lastUpdate) {
         this.lastUpdate = lastUpdate;
         this.id = id;
@@ -21,30 +30,42 @@ public class StoredTracker implements Serializable {
         this.frequency = frequency;
     }
 
-    public StoredTracker(long id, String url, String download, long frequency) {
-        this.id = id;
-        this.url = url;
-        this.download = download;
-        this.frequency = frequency;
-        this.lastUpdate = System.currentTimeMillis();
-    }
-
+    /**
+     * Gets the ID of this tracker
+     * @return The ID
+     */
     public long getId() {
         return id;
     }
 
+    /**
+     * Gets the URL to send this tracker info to
+     * @return The URL
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Gets the download key for this tracker
+     * @return The download key
+     */
     public String getDownload() {
         return download;
     }
 
+    /**
+     * Gets the frequency with which this tracker should be updated
+     * @return The update frequency
+     */
     public long getFrequency() {
         return frequency;
     }
 
+    /**
+     * Gets the last update time for this tracker
+     * @return The last update time
+     */
     public long getLastUpdate() {
         return lastUpdate;
     }

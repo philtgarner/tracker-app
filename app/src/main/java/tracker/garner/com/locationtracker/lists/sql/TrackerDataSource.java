@@ -9,11 +9,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import tracker.garner.com.locationtracker.Tracker;
 import tracker.garner.com.locationtracker.lists.StoredTracker;
 
 /**
- * Created by Phil on 13/04/2015.
+ * @author Phil Garner
+ * A class used to extract stored tracking information from an SQLite database stored on the device
  */
 public class TrackerDataSource {
 
@@ -25,14 +25,28 @@ public class TrackerDataSource {
         dbHelper = new TrackerSQLiteHelper(context);
     }
 
+    /**
+     * Opens the database, must be called before any other methods
+     * @throws SQLException When the database fails to open
+     */
     public void open() throws SQLException{
         db = dbHelper.getWritableDatabase();
     }
 
+    /**
+     * Closes the database
+     */
     public void close(){
         dbHelper.close();
     }
 
+    /**
+     * Takes the details of a tracker and stores them in the database
+     * @param url The URL to send the tracking information to
+     * @param download The download key
+     * @param frequency The frequency to update the location
+     * @return An object representing the stored tracker, null if unsuccessful
+     */
     public StoredTracker createStoredTracker(String url, String download, int frequency){
         ContentValues values = new ContentValues();
         values.put(TrackerSQLiteHelper.COLUMN_URL, url);
@@ -49,12 +63,20 @@ public class TrackerDataSource {
         return t;
     }
 
+    /**
+     * Updates the time of a given stored tracker. The "last used" time is set to the current time.
+     * @param t The tracker to update the "last used" time
+     */
     public void updateTime(StoredTracker t){
         ContentValues values = new ContentValues();
         values.put(TrackerSQLiteHelper.COLUMN_LAST_USED, System.currentTimeMillis());
         db.update(TrackerSQLiteHelper.TABLE,values, TrackerSQLiteHelper.COLUMN_ID + " = " + t.getId(), null);
     }
 
+    /**
+     * Gets a list of all stored trackers with the most recently used first in the list
+     * @return All stored trackers
+     */
     public List<StoredTracker> getAllTrackers(){
         List<StoredTracker> output = new ArrayList<StoredTracker>();
 
@@ -71,11 +93,20 @@ public class TrackerDataSource {
         return output;
     }
 
+    /**
+     * Deletes the given tracker from the SQLite database
+     * @param t The stored tracker to delete
+     */
     public void deleteTracker(StoredTracker t){
         long id = t.getId();
         db.delete(TrackerSQLiteHelper.TABLE, TrackerSQLiteHelper.COLUMN_ID + " = " + id, null);
     }
 
+    /**
+     * Takes a database cursor and creates a stored tracker object from it
+     * @param c The cursor to read
+     * @return An object representing the stored tracker
+     */
     private StoredTracker cursorToTracker(Cursor c){
         long id = c.getLong(0);
         String url = c.getString(1);

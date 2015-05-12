@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">Location Tracker</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="placeholder_api_version">vX</string>
     <string name="title_api_version">API version</string>
@@ -12,5 +11,21 @@
     <string name="title_settings_privacy_location">Privacy location</string>
     <string name="placeholder_privacy_radius">500</string>
     <string name="title_privacy_radius">Privacy radius</string>
+    <string name="title_settings">Settings</string>
+    <string name="menu_share">Share</string>
+    <string name="menu_stop">Stop</string>
+    <string name="placeholder_url">URL</string>
+    <string name="placeholder_frequency">Frequency</string>
+    <string name="placeholder_download">Download</string>
+    <string name="share_subject">Share tracking URL</string>
+    <string name="error_adding_tracker">"Could not add a new tracking entry - "</string>
+    <string name="settings_no_privacy">None set</string>
+    <string name="tracker_marker_title">Me</string>
+    <string name="notification_title">Tracking</string>
+    <string name="notification_initial_text">Starting to track</string>
+    <string name="notification_time_ago">Last update: %s ago</string>
+    <string name="initialization_failed">Something went wrong with the initialization, trying again</string>
+    <string name="initialization_complete">Initialization complete</string>
+    <string name="launch_track_button">TRACK</string>
 
 </resources>

@@ -16,13 +16,7 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.widget.Toast;
-
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.Vector;
 
@@ -33,28 +27,38 @@ import tracker.garner.com.locationtracker.async.wrappers.InitializationDetails;
 import tracker.garner.com.locationtracker.async.wrappers.LocationDetails;
 
 /**
- * Created by Phil on 03/03/2015.
+ * @author Phil Garner
+ * The service that periodically sends the information to the server
  */
 public class TrackingService extends Service implements LocationListener, InitializerHandler{
 
+    //Things to build the notification
     private Notification.Builder notificationBuilder = null;
     private NotificationManager notificationManager = null;
 
+    //Info for the server
     private String url = null;
-    private String password = null;
-    private String up = null;
+    private String download = null;
+    private String upload = null;
     private long frequency = 0;
-    private long lastUpdate = 0;
     private boolean reset = false;
     private String deviceID = null;
 
+    //Time of last update (or attempted update)
+    private long lastUpdate = 0;
+
+    //Booleans used to check initialized state
     private boolean initialized = false;
     private boolean initializing = false;
+
+    //List of locations that could not be uploaded (probably due to lack of signal)
     private Vector<Location> looseEnds = new Vector<>();
 
+    //Managers for listening for connectivity and location changes
     private LocationManager locationManager = null;
     private ConnectivityManager connectivityManager = null;
 
+    //Privacy details
     private int privacyRadius = 0;
     private Location privacyLocation = null;
 
@@ -68,26 +72,27 @@ public class TrackingService extends Service implements LocationListener, Initia
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        url = intent.getStringExtra(TrackerActivity.EXTRA_URL);
-        password = intent.getStringExtra(TrackerActivity.EXTRA_PASSWORD);
-        deviceID = intent.getStringExtra(TrackerActivity.EXTRA_DEVICE_ID);
-        frequency = intent.getLongExtra(TrackerActivity.EXTRA_FREQUENCY, 10)*1000;
-        reset = intent.getBooleanExtra(TrackerActivity.EXTRA_RESET, false);
+        //Get all the information from the launcher
+        url = intent.getStringExtra(AbstractTrackerActivity.EXTRA_URL);
+        download = intent.getStringExtra(AbstractTrackerActivity.EXTRA_PASSWORD);
+        deviceID = intent.getStringExtra(AbstractTrackerActivity.EXTRA_DEVICE_ID);
+        frequency = intent.getLongExtra(AbstractTrackerActivity.EXTRA_FREQUENCY, 10)*1000;
+        reset = intent.getBooleanExtra(AbstractTrackerActivity.EXTRA_RESET, false);
 
-
-
+        //Start listening for location changes
         locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,this);  //Provider, min time (millis), min distance, listener
 
+        //Build the notification
         notificationBuilder = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.notification)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
-                .setContentTitle("Tracking")
-                .setContentText("Starting to track")
+                .setContentTitle(getString(R.string.notification_title))
+                .setContentText(getString(R.string.notification_initial_text))
                 .setOngoing(true);
 
-        Intent resultIntent = new Intent(this, Tracker.class);
+        //Build the intent that is launched when the notification is clicked
+        Intent resultIntent = new Intent(this, TrackerViewer.class);
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
                         this,
@@ -95,26 +100,26 @@ public class TrackingService extends Service implements LocationListener, Initia
                         resultIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
-
+        //Associate the intent with the notification
         notificationBuilder.setContentIntent(resultPendingIntent);
 
-
+        //Start the notification
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(AbstractTrackerActivity.NOTIFICATION_ID, notificationBuilder.build());
 
-        notificationManager.notify(TrackerActivity.NOTIFICATION_ID, notificationBuilder.build());
-
+        //Get the connectivity manager to monitor the changes in connectivity
         connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         //Get the settings - to find the privacy location
-        SharedPreferences settings = getSharedPreferences(TrackerActivity.SETTINGS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences settings = getSharedPreferences(AbstractTrackerActivity.SETTINGS_NAME, Context.MODE_PRIVATE);
         //Get the radius for the privacy circle
-        privacyRadius = settings.getInt(TrackerActivity.SETTINGS_PRIVACY_RADIUS, TrackerActivity.SETTINGS_DEFAULT_PRIVACY_RADIUS);
+        privacyRadius = settings.getInt(AbstractTrackerActivity.SETTINGS_PRIVACY_RADIUS, AbstractTrackerActivity.SETTINGS_DEFAULT_PRIVACY_RADIUS);
 
         //If the user has set a privacy location then use it.
-        if(settings.contains(TrackerActivity.SETTINGS_PRIVACY_LATITUDE) && settings.contains(TrackerActivity.SETTINGS_PRIVACY_LONGDITUDE)) {
-            double privacyLat = Double.parseDouble(settings.getString(TrackerActivity.SETTINGS_PRIVACY_LATITUDE, "0"));
-            double privacyLong = Double.parseDouble(settings.getString(TrackerActivity.SETTINGS_PRIVACY_LONGDITUDE, "0"));
-            privacyLocation = new Location(TrackerActivity.SETTINGS_PRIVACY_LOCATION);
+        if(settings.contains(AbstractTrackerActivity.SETTINGS_PRIVACY_LATITUDE) && settings.contains(AbstractTrackerActivity.SETTINGS_PRIVACY_LONGDITUDE)) {
+            double privacyLat = Double.parseDouble(settings.getString(AbstractTrackerActivity.SETTINGS_PRIVACY_LATITUDE, "0"));
+            double privacyLong = Double.parseDouble(settings.getString(AbstractTrackerActivity.SETTINGS_PRIVACY_LONGDITUDE, "0"));
+            privacyLocation = new Location(AbstractTrackerActivity.SETTINGS_PRIVACY_LOCATION);
             privacyLocation.setLatitude(privacyLat);
             privacyLocation.setLongitude(privacyLong);
         }
@@ -123,19 +128,24 @@ public class TrackingService extends Service implements LocationListener, Initia
         return START_REDELIVER_INTENT;
     }
 
+    /**
+     * Checks if an upload is required and acts appropriately. This is called every time a change in location is detected.
+     * @param l The location to upload
+     */
     private void updateLocation(Location l){
 
-        //First check if we are due an update
+        //Check if we are due an update (the difference between now and the last update must be more than the frequency of updates)
         long time = System.currentTimeMillis();
-        l.setTime(time);
+        l.setTime(time);        //Use the time from the device TODO Do we need this step?
         long timeSinceUpdate = time - lastUpdate;
+        //If an update is required
         if(timeSinceUpdate >= frequency) {
             NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
-            //If connected then we can either initialize or upload our location
+            //If connected to the internet then we can either initialize or upload our location
             if (netInfo != null && netInfo.isConnected()) {
                 //If initialized upload the location
                 if (initialized) {
-                    //Upload location
+                    //Upload location the current location and tie up any loose ends
                     uploadLocation(l);
                     tieUpLooseEnds();
                 }
@@ -154,25 +164,31 @@ public class TrackingService extends Service implements LocationListener, Initia
         }
         //If no update is due
         else{
-            //No update - update time ago
-            String updateTime = TrackerActivity.niceTime(timeSinceUpdate);
-            //lastUpdateTime.setText(updateTime);
-            notificationBuilder.setContentText("Last update: " + updateTime + " ago");
-            notificationManager.notify(TrackerActivity.NOTIFICATION_ID, notificationBuilder.build());
-
-
+            //No update - update time ago on the notification
+            String updateTime = AbstractTrackerActivity.niceTime(timeSinceUpdate);
+            notificationBuilder.setContentText(String.format(getString(R.string.notification_time_ago), updateTime));
+            notificationManager.notify(AbstractTrackerActivity.NOTIFICATION_ID, notificationBuilder.build());
         }
     }
 
+    /**
+     * Starts the initialization process if it hasn't already been started
+     */
     private void init(){
         if(!initializing) {
             Initializer init = new Initializer();
-            InitializationDetails initializationDetails = new InitializationDetails(url, password, reset, deviceID, this);
+            InitializationDetails initializationDetails = new InitializationDetails(url, download, reset, deviceID, this);
             init.execute(initializationDetails);
             initializing = true;
         }
     }
 
+
+    /**
+     * Uploads the location of the user (if they are not in their privacy zone).
+     * @param l The location to upload
+     * @return True if request to upload was made, false otherwise
+     */
     private boolean uploadLocation(Location l){
 
         long time = l.getTime();
@@ -188,16 +204,16 @@ public class TrackingService extends Service implements LocationListener, Initia
         if(privacyLocation == null || l.distanceTo(privacyLocation) > privacyRadius ) {
 
             //Send to server
-            LocationDetails ld = new LocationDetails(l, time, url, up);
+            LocationDetails ld = new LocationDetails(l, time, url, upload);
             Uploader uploader = new Uploader();
             uploader.execute(ld);
 
             //Update the UI with broadcast message:
-            Intent intent = new Intent(TrackerActivity.BROADCAST_EVENT);
-            intent.putExtra(TrackerActivity.BROADCAST_LATITUDE, lat);
-            intent.putExtra(TrackerActivity.BROADCAST_LONGDITUDE, longd);
-            intent.putExtra(TrackerActivity.BROADCAST_SPEED, spd);
-            intent.putExtra(TrackerActivity.BROADCAST_ALTITUDE, alt);
+            Intent intent = new Intent(AbstractTrackerActivity.BROADCAST_EVENT);
+            intent.putExtra(AbstractTrackerActivity.BROADCAST_LATITUDE, lat);
+            intent.putExtra(AbstractTrackerActivity.BROADCAST_LONGDITUDE, longd);
+            intent.putExtra(AbstractTrackerActivity.BROADCAST_SPEED, spd);
+            intent.putExtra(AbstractTrackerActivity.BROADCAST_ALTITUDE, alt);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
 
@@ -210,6 +226,10 @@ public class TrackingService extends Service implements LocationListener, Initia
         }
     }
 
+    /**
+     * Uploads all the loose ends (Locations that couldn't be uploaded due to a lack of connection). These are done one by one.
+     * @return True (once all upload requests are sent).
+     */
     private boolean tieUpLooseEnds(){
         int length = looseEnds.size();
         if(length > 0){
@@ -232,7 +252,8 @@ public class TrackingService extends Service implements LocationListener, Initia
 
     @Override
     public void onDestroy() {
-        notificationManager.cancel(TrackerActivity.NOTIFICATION_ID);
+        //When the service stops cancel the notification
+        notificationManager.cancel(AbstractTrackerActivity.NOTIFICATION_ID);
         locationManager.removeUpdates(this);
         super.onDestroy();
     }
@@ -244,34 +265,41 @@ public class TrackingService extends Service implements LocationListener, Initia
 
     @Override
     public void onLocationChanged(Location location) {
+        //Update the location whenever a change is detected.
         updateLocation(location);
     }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-
+        //Do nothing
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-
+        //Do nothing
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-
+        //Do nothing
     }
 
     @Override
     public void setUploadKey(String output) {
+        //When an initialization request has been received check that an upload key was found.
         if(output != null){
-            up = output;
+            //Store the upload key
+            upload = output;
+            //Set the initialized variable to true (so we don't try it again)
             initialized = true;
-            Toast.makeText(this, "Initialization complete", Toast.LENGTH_SHORT).show();
+            //Display message to the user.
+            Toast.makeText(this, getString(R.string.initialization_complete), Toast.LENGTH_SHORT).show();
         }
+        //If initialization didn't work, display a message, will try again later.
         else{
-            Toast.makeText(this, "Something went wrong with the initialization", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.initialization_failed), Toast.LENGTH_SHORT).show();
         }
+        //Regardless of the result we have now finished attempting to initialize
         initializing = false;
     }
 }

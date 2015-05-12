@@ -4,5 +4,5 @@
     <item
         android:id="@+id/menu_item_stop"
         android:showAsAction="ifRoom"
-        android:title="Stop"/>
+        android:title="@string/menu_stop"/>
 </menu>

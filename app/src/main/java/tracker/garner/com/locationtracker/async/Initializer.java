@@ -15,46 +15,41 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import tracker.garner.com.locationtracker.TrackerActivity;
+import tracker.garner.com.locationtracker.AbstractTrackerActivity;
 import tracker.garner.com.locationtracker.async.wrappers.InitializationDetails;
 
 /**
- * Created by Phil on 24/02/2015.
+ * @author Phil Garner
+ * The asynchrinous task that sends a request to initialise the system
  */
 public class Initializer extends AsyncTask<InitializationDetails, Integer, String> {
 
     private InitializerHandler callback = null;
 
-    public static final String SUCCESS = "success";
-    public static final String UPLOAD_KEY = "key";
-
     @Override
     protected String doInBackground(InitializationDetails... params) {
-        String urlToSend = TrackerActivity.getUsableURL(params[0].getUrl());
+        //Get all the information regarding the upload location and callbacks etc.
+        String urlToSend = AbstractTrackerActivity.getUsableURL(params[0].getUrl());
         String password = params[0].getPassword();
         int reset = params[0].isReset();
         callback = params[0].getCallback();
         String deviceID = params[0].getDeviceID();
 
-
-
         try {
 
             //URL to update: /api/v1/init/dl where "dl" is the download key
-            urlToSend += TrackerActivity.URL_INIT + URLEncoder.encode(password, "UTF-8");
+            urlToSend += AbstractTrackerActivity.URL_INIT + URLEncoder.encode(password, "UTF-8");
 
             //Reset
-            String param = TrackerActivity.URL_INIT_RESET_PARAM;
+            String param = AbstractTrackerActivity.URL_INIT_RESET_PARAM;
             param += URLEncoder.encode(reset + "", "UTF-8");
             //Device ID
-            param += TrackerActivity.URL_ADDITIONAL_PARAM;
-            param += TrackerActivity.URL_INIT_DEVICE_PARAM;
+            param += AbstractTrackerActivity.URL_ADDITIONAL_PARAM;
+            param += AbstractTrackerActivity.URL_INIT_DEVICE_PARAM;
             param += URLEncoder.encode(deviceID, "UTF-8");
 
 
-            Log.i("Initializer.java", urlToSend);
-
-            //Build the URL and connect to it with the right page number
+            //Connect to the URL
             URL url = new URL(urlToSend);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Accept", "application/json");
@@ -64,6 +59,7 @@ public class Initializer extends AsyncTask<InitializationDetails, Integer, Strin
             connection.setRequestMethod("POST");
             connection.setDoInput(true);
 
+            //Send the params
             OutputStream os = connection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
             writer.write(param);
@@ -73,21 +69,23 @@ public class Initializer extends AsyncTask<InitializationDetails, Integer, Strin
 
             connection.connect();
 
+            //Get the response
             InputStream is = connection.getInputStream();
-
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
             StringBuilder jsonString = new StringBuilder(1024);
             String l1 = "";
             while((l1 = reader.readLine()) != null)
                 jsonString.append(l1);
 
+            //Close all connections and input streams
             is.close();
             connection.disconnect();
 
+            //Parse the response
             JSONObject output = new JSONObject(jsonString.toString());
-            if(output.has(SUCCESS) && output.getBoolean(SUCCESS)){
-                return output.getString(UPLOAD_KEY);
+            //If we have a valid response return it, otherwise return null
+            if(output.has(AbstractTrackerActivity.JSON_RESPONSE_INIT_SUCCESS) && output.getBoolean(AbstractTrackerActivity.JSON_RESPONSE_INIT_SUCCESS)){
+                return output.getString(AbstractTrackerActivity.JSON_RESPONSE_INIT_UPLOAD_KEY);
             }
             else{
                 return null;
@@ -101,6 +99,7 @@ public class Initializer extends AsyncTask<InitializationDetails, Integer, Strin
 
     @Override
     public void onPostExecute(String output){
+        //After getting upload key send it to the callback to handle
         callback.setUploadKey(output);
     }
 

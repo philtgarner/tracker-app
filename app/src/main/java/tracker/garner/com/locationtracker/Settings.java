@@ -5,32 +5,20 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import com.melnykov.fab.FloatingActionButton;
-
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
 
-import tracker.garner.com.locationtracker.lists.StoredTracker;
-import tracker.garner.com.locationtracker.lists.TrackerArrayAdapter;
-import tracker.garner.com.locationtracker.lists.sql.TrackerDataSource;
-
-
-public class Settings extends TrackerActivity implements View.OnClickListener{
-
-
+/**
+ * @author Phil Garner
+ * An activity used to pick adjust the settings for the app
+ */
+public class Settings extends AbstractTrackerActivity implements View.OnClickListener{
 
     private ImageButton map = null;
     private EditText radius = null;
@@ -44,40 +32,56 @@ public class Settings extends TrackerActivity implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings);
 
+        //Get the UI elements
         map = (ImageButton)findViewById(R.id.settings_location_picker);
         home = (TextView)findViewById(R.id.settings_location);
         apiVersion = (TextView)findViewById(R.id.settings_api_version);
         radius = (EditText)findViewById(R.id.settings_radius);
 
+        //Display the API version according to the constant set in the super class
         apiVersion.setText(API_VERSION);
 
+        //Get the settings
         settings = getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
+        //Get the radius and display it
         int privacyDistance = settings.getInt(SETTINGS_PRIVACY_RADIUS, SETTINGS_DEFAULT_PRIVACY_RADIUS);
         radius.setText(privacyDistance + "");
+
+        //If we have a stored privacy position then use it
         if(settings.contains(SETTINGS_PRIVACY_LATITUDE) && settings.contains(SETTINGS_PRIVACY_LONGDITUDE)) {
+            //Get the stored latitude and longditude
             String privacyLat = settings.getString(SETTINGS_PRIVACY_LATITUDE, "0");
             String privacyLong = settings.getString(SETTINGS_PRIVACY_LONGDITUDE, "0");
+            //Build a string representing the position
             String privacyLocation = privacyLat + ", " + privacyLong;
+            //Try and get a friendly name for the position
             try {
+                //Build geocoder
                 Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
+                //Get a list (of 1) addresses for the given location
                 List<Address> addresses = gcd.getFromLocation(Double.parseDouble(privacyLat), Double.parseDouble(privacyLong), 1);
-                if(addresses.size() > 0){
+                //If we found an address then get the locality as a friendly name
+                if(addresses != null &&addresses.size() > 0){
                     privacyLocation = addresses.get(0).getLocality();
                 }
             }catch(Exception e){
                 //Do nothing - just cope with the lat/long as the displayed privacy location
             }
+            //Show the privacy location
             home.setText(privacyLocation);
         }
+        //If no privacy location set then display message informing the user of this
         else{
-            home.setText("None set");
+            home.setText(getString(R.string.settings_no_privacy));
         }
 
+        //Listen for clicks on the map button
         map.setOnClickListener(this);
     }
 
     @Override
     protected void onPause() {
+        //When we leave the activity store the location for future use
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt(SETTINGS_PRIVACY_RADIUS, Integer.parseInt(radius.getText().toString()));
         editor.commit();
@@ -86,6 +90,7 @@ public class Settings extends TrackerActivity implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
+        //If map button clicked then launch the privacy location picker
         if(v == map){
             Intent i = new Intent(this, PrivacyPicker.class);
             startActivity(i);
