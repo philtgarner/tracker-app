@@ -69,6 +69,13 @@ public abstract class AbstractTrackerActivity extends Activity{
     public static final String JSON_RESPONSE_INIT_SUCCESS = "success";
     public static final String JSON_RESPONSE_INIT_UPLOAD_KEY = "key";
     public static final String JSON_RESPONSE_UPDATE_RESPONSE = "response";
+    public static final String JSON_RESPONSE_UPDATE_TIME = "date_time";
+
+    public static final int UPLOAD_RESPONSE_SUCCESS = 1;
+    public static final int UPLOAD_RESPONSE_FAILURE = -1;
+    public static final int UPLOAD_RESPONSE_EXCEPTION = -2;
+
+
 
 
     /**

@@ -27,5 +27,7 @@
     <string name="initialization_failed">Something went wrong with the initialization, trying again</string>
     <string name="initialization_complete">Initialization complete</string>
     <string name="launch_track_button">TRACK</string>
+    <string name="toast_privacy_zone">In privacy zone</string>
+    <string name="toast_loose_ends">Tied up loose ends (%d)</string>
 
 </resources>

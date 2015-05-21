@@ -16,6 +16,7 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Vector;
@@ -25,12 +26,14 @@ import tracker.garner.com.locationtracker.async.InitializerHandler;
 import tracker.garner.com.locationtracker.async.Uploader;
 import tracker.garner.com.locationtracker.async.wrappers.InitializationDetails;
 import tracker.garner.com.locationtracker.async.wrappers.LocationDetails;
+import tracker.garner.com.locationtracker.async.UploaderHandler;
+import tracker.garner.com.locationtracker.async.wrappers.UploadResponse;
 
 /**
  * @author Phil Garner
  * The service that periodically sends the information to the server
  */
-public class TrackingService extends Service implements LocationListener, InitializerHandler{
+public class TrackingService extends Service implements LocationListener, InitializerHandler, UploaderHandler{
 
     //Things to build the notification
     private Notification.Builder notificationBuilder = null;
@@ -53,6 +56,8 @@ public class TrackingService extends Service implements LocationListener, Initia
 
     //List of locations that could not be uploaded (probably due to lack of signal)
     private Vector<Location> looseEnds = new Vector<>();
+    //List of the locations we are currently in the process of uploading
+    private Vector<Location> inProgress = new Vector<>();
 
     //Managers for listening for connectivity and location changes
     private LocationManager locationManager = null;
@@ -203,25 +208,34 @@ public class TrackingService extends Service implements LocationListener, Initia
         //If there is no privacy set or the user is currently outside the privacy circle upload the position
         if(privacyLocation == null || l.distanceTo(privacyLocation) > privacyRadius ) {
 
-            //Send to server
-            LocationDetails ld = new LocationDetails(l, time, url, upload);
-            Uploader uploader = new Uploader();
-            uploader.execute(ld);
+            //If we aren't already uploading the given location then continue with the upload
+            if(!inProgress.contains(l)) {
+                //Store the location as in progress, this will be removed after a successful upload
+                inProgress.add(l);
 
-            //Update the UI with broadcast message:
-            Intent intent = new Intent(AbstractTrackerActivity.BROADCAST_EVENT);
-            intent.putExtra(AbstractTrackerActivity.BROADCAST_LATITUDE, lat);
-            intent.putExtra(AbstractTrackerActivity.BROADCAST_LONGDITUDE, longd);
-            intent.putExtra(AbstractTrackerActivity.BROADCAST_SPEED, spd);
-            intent.putExtra(AbstractTrackerActivity.BROADCAST_ALTITUDE, alt);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                //Send to server
+                LocationDetails ld = new LocationDetails(l, time, url, upload, this);
+                Uploader uploader = new Uploader();
+                uploader.execute(ld);
 
+                //Update the UI with broadcast message:
+                Intent intent = new Intent(AbstractTrackerActivity.BROADCAST_EVENT);
+                intent.putExtra(AbstractTrackerActivity.BROADCAST_LATITUDE, lat);
+                intent.putExtra(AbstractTrackerActivity.BROADCAST_LONGDITUDE, longd);
+                intent.putExtra(AbstractTrackerActivity.BROADCAST_SPEED, spd);
+                intent.putExtra(AbstractTrackerActivity.BROADCAST_ALTITUDE, alt);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
-            return true;
+                return true;
+            }
+            //We're already in the process of uploading this one, do nothing
+            else{
+                return false;
+            }
         }
         //If we're in the privacy circle then don't upload
         else{
-            Toast.makeText(getApplicationContext(), "In privacy zone", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_privacy_zone), Toast.LENGTH_SHORT).show();
             return false;
         }
     }
@@ -244,11 +258,12 @@ public class TrackingService extends Service implements LocationListener, Initia
             //Empty all the loose ends
             looseEnds.removeAllElements();
 
-            Toast.makeText(this, "Tied up loose ends (" + length + ")", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, String.format(getString(R.string.toast_loose_ends), length), Toast.LENGTH_SHORT).show();
         }
 
         return true;
     }
+
 
     @Override
     public void onDestroy() {
@@ -301,5 +316,16 @@ public class TrackingService extends Service implements LocationListener, Initia
         }
         //Regardless of the result we have now finished attempting to initialize
         initializing = false;
+    }
+
+    @Override
+    public void handleUpload(UploadResponse response) {
+        //Whatever the reponse we're not in the process of uploading it anymore so remove it from the in progress list.
+        inProgress.remove(response.getLocation());
+        //If the upload was a failure then add the location to the list of loose ends
+        if(!response.success())
+            looseEnds.add(response.getLocation());
+
+        Log.i(this.getClass().toString(), String.format("Loose ends: %d In progress: %d", looseEnds.size(), inProgress.size()));
     }
 }
