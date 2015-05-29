@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

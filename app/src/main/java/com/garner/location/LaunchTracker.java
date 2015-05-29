@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,8 +13,8 @@ import android.widget.TextView;
 
 import java.sql.SQLException;
 
-import tracker.garner.com.locationtracker.lists.StoredTracker;
-import tracker.garner.com.locationtracker.lists.sql.TrackerDataSource;
+import com.garner.location.lists.StoredTracker;
+import com.garner.location.lists.sql.TrackerDataSource;
 
 /**
  * @author Phil Garner
@@ -51,7 +51,7 @@ public class LaunchTracker extends AbstractTrackerActivity implements View.OnCli
         //Display the information in the UI
         url.setText(tracker.getUrl());
         download.setText(tracker.getDownload());
-        frequency.setText(AbstractTrackerActivity.niceTime(tracker.getFrequency() * 1000));
+        frequency.setText(niceTime(tracker.getFrequency() * 1000));
 
         //Listen for clicks on the "TRACK" button
         go.setOnClickListener(this);

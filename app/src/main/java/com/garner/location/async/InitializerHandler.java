@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.async;
+package com.garner.location.async;
 
 /**
  * @author Phil Garner

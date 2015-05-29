@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.async.wrappers;
+package com.garner.location.async.wrappers;
 
 import android.location.Location;
 

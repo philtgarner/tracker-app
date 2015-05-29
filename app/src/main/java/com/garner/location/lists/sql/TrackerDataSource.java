@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.lists.sql;
+package com.garner.location.lists.sql;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import tracker.garner.com.locationtracker.lists.StoredTracker;
+import com.garner.location.lists.StoredTracker;
 
 /**
  * @author Phil Garner

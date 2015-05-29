@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.lists;
+package com.garner.location.lists;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -9,8 +9,8 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import tracker.garner.com.locationtracker.R;
-import tracker.garner.com.locationtracker.AbstractTrackerActivity;
+import com.garner.location.AbstractTrackerActivity;
+import com.garner.location.R;
 
 /**
  * @author Phil Garner

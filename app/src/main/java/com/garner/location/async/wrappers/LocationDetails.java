@@ -1,10 +1,10 @@
-package tracker.garner.com.locationtracker.async.wrappers;
+package com.garner.location.async.wrappers;
 
 import android.location.Location;
 
 import java.io.Serializable;
 
-import tracker.garner.com.locationtracker.async.UploaderHandler;
+import com.garner.location.async.UploaderHandler;
 
 /**
  * @author Phil Garner

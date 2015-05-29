@@ -29,5 +29,6 @@
     <string name="launch_track_button">TRACK</string>
     <string name="toast_privacy_zone">In privacy zone</string>
     <string name="toast_loose_ends">Tied up loose ends (%d)</string>
+    <string name="settings_toast_mode">Toast mode</string>
 
 </resources>

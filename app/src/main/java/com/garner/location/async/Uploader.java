@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.async;
+package com.garner.location.async;
 
 import android.location.Location;
 import android.os.AsyncTask;
@@ -16,9 +16,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import tracker.garner.com.locationtracker.AbstractTrackerActivity;
-import tracker.garner.com.locationtracker.async.wrappers.LocationDetails;
-import tracker.garner.com.locationtracker.async.wrappers.UploadResponse;
+import com.garner.location.AbstractTrackerActivity;
+import com.garner.location.async.wrappers.LocationDetails;
+import com.garner.location.async.wrappers.UploadResponse;
 
 /**
  * @author Phil Garner

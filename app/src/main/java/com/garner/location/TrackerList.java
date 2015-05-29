@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,9 +14,9 @@ import com.melnykov.fab.FloatingActionButton;
 import java.sql.SQLException;
 import java.util.List;
 
-import tracker.garner.com.locationtracker.lists.StoredTracker;
-import tracker.garner.com.locationtracker.lists.TrackerArrayAdapter;
-import tracker.garner.com.locationtracker.lists.sql.TrackerDataSource;
+import com.garner.location.lists.StoredTracker;
+import com.garner.location.lists.TrackerArrayAdapter;
+import com.garner.location.lists.sql.TrackerDataSource;
 
 
 public class TrackerList extends AbstractTrackerActivity implements View.OnClickListener, AdapterView.OnItemClickListener, MenuItem.OnMenuItemClickListener{

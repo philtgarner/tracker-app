@@ -46,6 +46,16 @@
 
 
 
+    <CheckedTextView
+        android:id="@+id/settings_toast_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checkMark="?android:attr/listChoiceIndicatorMultiple"
+        android:checked="true"
+        android:layout_centerVertical="true"
+        android:textSize="18dp"
+        android:text="@string/settings_toast_mode" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -68,6 +78,5 @@
         android:layout_height="wrap_content"
         android:textSize="18dp"
         android:text="@string/placeholder_api_version"/>
-
 
 </LinearLayout>

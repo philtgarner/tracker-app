@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -21,13 +21,13 @@ import android.widget.Toast;
 
 import java.util.Vector;
 
-import tracker.garner.com.locationtracker.async.Initializer;
-import tracker.garner.com.locationtracker.async.InitializerHandler;
-import tracker.garner.com.locationtracker.async.Uploader;
-import tracker.garner.com.locationtracker.async.wrappers.InitializationDetails;
-import tracker.garner.com.locationtracker.async.wrappers.LocationDetails;
-import tracker.garner.com.locationtracker.async.UploaderHandler;
-import tracker.garner.com.locationtracker.async.wrappers.UploadResponse;
+import com.garner.location.async.Initializer;
+import com.garner.location.async.InitializerHandler;
+import com.garner.location.async.Uploader;
+import com.garner.location.async.wrappers.InitializationDetails;
+import com.garner.location.async.wrappers.LocationDetails;
+import com.garner.location.async.UploaderHandler;
+import com.garner.location.async.wrappers.UploadResponse;
 
 /**
  * @author Phil Garner
@@ -46,6 +46,7 @@ public class TrackingService extends Service implements LocationListener, Initia
     private long frequency = 0;
     private boolean reset = false;
     private String deviceID = null;
+    private boolean toast = AbstractTrackerActivity.SETTINGS_DEFAULT_TOAST;
 
     //Time of last update (or attempted update)
     private long lastUpdate = 0;
@@ -120,6 +121,9 @@ public class TrackingService extends Service implements LocationListener, Initia
         //Get the radius for the privacy circle
         privacyRadius = settings.getInt(AbstractTrackerActivity.SETTINGS_PRIVACY_RADIUS, AbstractTrackerActivity.SETTINGS_DEFAULT_PRIVACY_RADIUS);
 
+        //Get the users preference on toast messages.
+        toast = settings.getBoolean(AbstractTrackerActivity.SETTINGS_TOAST_MODE, AbstractTrackerActivity.SETTINGS_DEFAULT_TOAST);
+
         //If the user has set a privacy location then use it.
         if(settings.contains(AbstractTrackerActivity.SETTINGS_PRIVACY_LATITUDE) && settings.contains(AbstractTrackerActivity.SETTINGS_PRIVACY_LONGDITUDE)) {
             double privacyLat = Double.parseDouble(settings.getString(AbstractTrackerActivity.SETTINGS_PRIVACY_LATITUDE, "0"));
@@ -143,8 +147,14 @@ public class TrackingService extends Service implements LocationListener, Initia
         long time = System.currentTimeMillis();
         l.setTime(time);        //Use the time from the device TODO Do we need this step?
         long timeSinceUpdate = time - lastUpdate;
+
+
         //If an update is required
         if(timeSinceUpdate >= frequency) {
+
+            //Update last update time
+            lastUpdate = time;
+
             NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
             //If connected to the internet then we can either initialize or upload our location
             if (netInfo != null && netInfo.isConnected()) {
@@ -202,9 +212,6 @@ public class TrackingService extends Service implements LocationListener, Initia
         float spd = l.getSpeed();       //Meters per second
         double alt = l.getAltitude();   //Meters
 
-        //Update last update time
-        lastUpdate = time;
-
         //If there is no privacy set or the user is currently outside the privacy circle upload the position
         if(privacyLocation == null || l.distanceTo(privacyLocation) > privacyRadius ) {
 
@@ -253,12 +260,11 @@ public class TrackingService extends Service implements LocationListener, Initia
                 Location l = looseEnds.elementAt(length-i-1);
                 uploadLocation(l);
             }
-            //Set the time of the last update to the most recent location record
-            lastUpdate = looseEnds.firstElement().getTime();
             //Empty all the loose ends
             looseEnds.removeAllElements();
 
-            Toast.makeText(this, String.format(getString(R.string.toast_loose_ends), length), Toast.LENGTH_SHORT).show();
+            if(toast)
+                Toast.makeText(this, String.format(getString(R.string.toast_loose_ends), length), Toast.LENGTH_SHORT).show();
         }
 
         return true;
@@ -308,11 +314,13 @@ public class TrackingService extends Service implements LocationListener, Initia
             //Set the initialized variable to true (so we don't try it again)
             initialized = true;
             //Display message to the user.
-            Toast.makeText(this, getString(R.string.initialization_complete), Toast.LENGTH_SHORT).show();
+            if(toast)
+                Toast.makeText(this, getString(R.string.initialization_complete), Toast.LENGTH_SHORT).show();
         }
         //If initialization didn't work, display a message, will try again later.
         else{
-            Toast.makeText(this, getString(R.string.initialization_failed), Toast.LENGTH_SHORT).show();
+            if(toast)
+                Toast.makeText(this, getString(R.string.initialization_failed), Toast.LENGTH_SHORT).show();
         }
         //Regardless of the result we have now finished attempting to initialize
         initializing = false;

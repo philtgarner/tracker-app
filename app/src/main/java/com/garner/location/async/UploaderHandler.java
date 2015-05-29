@@ -1,6 +1,6 @@
-package tracker.garner.com.locationtracker.async;
+package com.garner.location.async;
 
-import tracker.garner.com.locationtracker.async.wrappers.UploadResponse;
+import com.garner.location.async.wrappers.UploadResponse;
 
 /**
  * @author Phil Garner

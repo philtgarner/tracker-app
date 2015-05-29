@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.lists.sql;
+package com.garner.location.lists.sql;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

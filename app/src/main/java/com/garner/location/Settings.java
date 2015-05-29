@@ -1,12 +1,12 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -24,6 +24,7 @@ public class Settings extends AbstractTrackerActivity implements View.OnClickLis
     private EditText radius = null;
     private TextView home = null;
     private TextView apiVersion = null;
+    private CheckedTextView toastMode = null;
     private SharedPreferences settings = null;
 
 
@@ -37,15 +38,18 @@ public class Settings extends AbstractTrackerActivity implements View.OnClickLis
         home = (TextView)findViewById(R.id.settings_location);
         apiVersion = (TextView)findViewById(R.id.settings_api_version);
         radius = (EditText)findViewById(R.id.settings_radius);
+        toastMode = (CheckedTextView)findViewById(R.id.settings_toast_mode);
 
         //Display the API version according to the constant set in the super class
         apiVersion.setText(API_VERSION);
 
         //Get the settings
-        settings = getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
+        settings = getSharedPreferences(SETTINGS_NAME, MODE_PRIVATE);
         //Get the radius and display it
         int privacyDistance = settings.getInt(SETTINGS_PRIVACY_RADIUS, SETTINGS_DEFAULT_PRIVACY_RADIUS);
         radius.setText(privacyDistance + "");
+        //Get the toast mode and display it
+        toastMode.setChecked(settings.getBoolean(SETTINGS_TOAST_MODE, SETTINGS_DEFAULT_TOAST));
 
         //If we have a stored privacy position then use it
         if(settings.contains(SETTINGS_PRIVACY_LATITUDE) && settings.contains(SETTINGS_PRIVACY_LONGDITUDE)) {
@@ -75,8 +79,9 @@ public class Settings extends AbstractTrackerActivity implements View.OnClickLis
             home.setText(getString(R.string.settings_no_privacy));
         }
 
-        //Listen for clicks on the map button
+        //Listen for clicks on the map button and checkbox
         map.setOnClickListener(this);
+        toastMode.setOnClickListener(this);
     }
 
     @Override
@@ -84,6 +89,7 @@ public class Settings extends AbstractTrackerActivity implements View.OnClickLis
         //When we leave the activity store the location for future use
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt(SETTINGS_PRIVACY_RADIUS, Integer.parseInt(radius.getText().toString()));
+        editor.putBoolean(SETTINGS_TOAST_MODE, toastMode.isChecked());
         editor.commit();
         super.onStop();
     }
@@ -94,8 +100,9 @@ public class Settings extends AbstractTrackerActivity implements View.OnClickLis
         if(v == map){
             Intent i = new Intent(this, PrivacyPicker.class);
             startActivity(i);
-
-
+        }
+        else if(v == toastMode){
+            toastMode.toggle();
         }
     }
 

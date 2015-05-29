@@ -1,4 +1,4 @@
-package tracker.garner.com.locationtracker.lists;
+package com.garner.location.lists;
 
 import java.io.Serializable;
 

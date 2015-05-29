@@ -1,10 +1,8 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.MenuItem;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -51,7 +49,7 @@ public class PrivacyPicker extends AbstractTrackerActivity implements GoogleMap.
         map.setOnMapClickListener(this);
 
         //Get the settings (to find out if there is already a privacy location set
-        settings = getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
+        settings = getSharedPreferences(SETTINGS_NAME, MODE_PRIVATE);
         settingsEditor = settings.edit();
 
         //Get the radius for the privacy circle

@@ -1,8 +1,6 @@
-package tracker.garner.com.locationtracker;
+package com.garner.location;
 
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.content.Context;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -35,6 +33,8 @@ public abstract class AbstractTrackerActivity extends Activity{
     protected static final String SETTINGS_PASSWORD = "tracker_settings_password";
     protected static final String SETTINGS_FREQUENCY = "tracker_settings_frequency";
     protected static final String SETTINGS_DEVICE_ID = "tracker_settings_dev_id";
+    protected static final String SETTINGS_TOAST_MODE = "tracker_settings_toast";
+    protected static final boolean SETTINGS_DEFAULT_TOAST = false;
     protected static final int SETTINGS_DEFAULT_PRIVACY_RADIUS = 500;
 
     //Constants for sending/receiving broadcast messages from the service to the tracking UI
